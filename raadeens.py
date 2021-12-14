@@ -1,7 +1,7 @@
 import random
 import tkinter
 from tkinter import StringVar, ttk, IntVar, messagebox
-from tkinter.constants import OUTSIDE, Y
+from tkinter.constants import OUTSIDE
 
 mainWindow = tkinter.Tk()
 mainWindow.configure(padx=100, pady=10)
