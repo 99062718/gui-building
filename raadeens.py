@@ -6,7 +6,7 @@ from tkinter.constants import OUTSIDE
 mainWindow = tkinter.Tk()
 mainWindow.configure(padx=100, pady=10)
 
-x = 1
+x = 0
 score = 0
 aantalGeraden = 0
 
@@ -18,6 +18,7 @@ def newRound():
     y = 0
     x += 1
     randomNum = random.randint(1, 1000)
+    print(randomNum)
     rondeText.set("ronde " + str(x))
 
 def continuePlaying():
@@ -30,6 +31,8 @@ def continuePlaying():
     if not KeepPlaying:
         messagebox.showinfo(message="U heeft " + str(aantalGeraden) + " keer geraden\nU heeft " + str(score) + " keer goed geraden!")
         mainWindow.destroy()
+    else:
+        newRound()
 
 def checkGuess():
     global score
@@ -37,7 +40,7 @@ def checkGuess():
     global y
 
     aantalGeraden += 1
-    
+
     if guessVar.get() == randomNum:
         score += 1
         messagebox.showinfo(message="U heeft het antwoord geraden!")
@@ -63,7 +66,7 @@ textLabel = tkinter.Label(text="Voer een getal in tussen 1 en 1000")
 textLabel.grid(column=0, row=0)
 
 guessVar = IntVar(mainWindow, 1)
-guessSpinbox = ttk.Spinbox(textvariable=IntVar, from_=1, to=1000, wrap=True)
+guessSpinbox = ttk.Spinbox(textvariable=guessVar, from_=1, to=1000, wrap=True)
 guessSpinbox.grid(column=0, row=1)
 
 submitButton = tkinter.Button(command=checkGuess, text="Submit")
