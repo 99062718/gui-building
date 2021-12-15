@@ -5,10 +5,6 @@ mainWindow = tkinter.Tk()
 mainWindow.configure(padx=50, pady=10)
 
 punten = 0
-vragen = [
-    "Hoe breed is uw snor?",
-    "Hoe lang is uw haar?"
-]
 
 # this array has all the data needed to generate the questions, boxes, ect
 dataArray = [
@@ -27,7 +23,7 @@ dataArray = [
 ]
 
 # this array will contain all the questions, boxes, ect that the function creates
-questions = []
+dataCreated = []
 
 # these are variables that will later be used to check answers
 toCheck = []
@@ -45,15 +41,15 @@ def dataSifter():
         toCheck.append([])
         toCheck[num].append(data[1])
 
-        questions.append([])
-        questions[num].append(tkinter.Frame())
-        questions[num][0].grid(column=0, row=num, pady=5)
+        dataCreated.append([])
+        dataCreated[num].append(tkinter.Frame())
+        dataCreated[num][0].grid(column=0, row=num, pady=5)
 
-        questions[num].append(tkinter.Label(questions[num][0], text=data[0] if type(data[0]) != type([]) else data[0][1]))
-        questions[num][1].grid(column=0, row=0)
+        dataCreated[num].append(tkinter.Label(dataCreated[num][0], text=data[0] if type(data[0]) != type([]) else data[0][1]))
+        dataCreated[num][1].grid(column=0, row=0)
 
         # checks dataArray to see what widget it needs to use
-        if type(data[1]) == type(1):
+        if type(data[1]) == type(1) or type(data[0]) == type([]):
             questionCreator("spinbox")
         elif type(data[1]) == type([]):
             questionCreator("radio")
@@ -65,9 +61,9 @@ def dataSifter():
 def questionCreator(widgetType): # creates widgets
     if widgetType == "spinbox":
         toCheck[num].append(IntVar())
-        questions[num].append(
+        dataCreated[num].append(
             ttk.Spinbox(
-                questions[num][0],
+                dataCreated[num][0],
                 from_=1,
                 to=float("inf"),
                 textvariable=toCheck[num][1]
@@ -75,32 +71,33 @@ def questionCreator(widgetType): # creates widgets
         )
 
         if type(dataArray[num][0]) == type([]):
-            questions[num][0].after(10, questionChanger, dataArray[num][0], dataArray[num - 1][1][0], toCheck[num - 1][1])
+            currentNum = num
+            for x in range(2):
+                dataCreated[num - 1][2 + x].bind("<Button-1>", lambda possibleQuestions=dataArray[num][0], changeCondition=dataArray[num - 1][1][0], currentCondition=toCheck[num - 1][1].get(), currentNum=currentNum: questionChanger(possibleQuestions, changeCondition, currentCondition, currentNum))
 
-        questions[num][2].grid(column=0, row=1)
+        dataCreated[num][2].grid(column=0, row=1)
     elif widgetType == "radio": # I could, in theory, make this have the ability to have as many radiobuttons as id want. But do i want to?
         toCheck[num].append(BooleanVar())
         for subNum in range(2):
-            questions[num].append(
+            dataCreated[num].append(
                 ttk.Radiobutton(
-                    questions[num][0],
+                    dataCreated[num][0],
                     text=toCheck[num][0][subNum],
                     value=True if subNum == 0 else False,
                     variable=toCheck[num][1]
                 )
             )
-            questions[num][subNum + 2].grid(column=0, row=subNum + 1)
+            dataCreated[num][subNum + 2].grid(column=0, row=subNum + 1)
     elif widgetType == "entry":
         toCheck[num].append(StringVar())
-        questions[num].append(ttk.Entry(questions[num][0], textvariable=toCheck[num][1]))
-        questions[num][2].grid(column=0, row=1)
+        dataCreated[num].append(ttk.Entry(dataCreated[num][0], textvariable=toCheck[num][1]))
+        dataCreated[num][2].grid(column=0, row=1)
 
-def questionChanger(possibleQuestions, changeCondition, currentCondition):
-    print("HUUU")
+def questionChanger(possibleQuestions, changeCondition, currentCondition, currentNum):
     if changeCondition == currentCondition:
-        questions[num][1].configure(text=possibleQuestions[0])
+        dataCreated[currentNum][1].configure(text=possibleQuestions[0])
     else:
-        questions[num][1].configure(text=possibleQuestions[1])
+        dataCreated[currentNum][1].configure(text=possibleQuestions[1])
 
 
 dataSifter()
