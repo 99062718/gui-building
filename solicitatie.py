@@ -1,10 +1,8 @@
 import tkinter
-from tkinter import BooleanVar, StringVar, IntVar, messagebox, ttk
+from tkinter import StringVar, IntVar, messagebox, ttk
 
 mainWindow = tkinter.Tk()
 mainWindow.configure(padx=50, pady=10)
-
-punten = 0
 
 # this array has all the data needed to generate the questions, boxes, ect
 dataArray = [
@@ -27,11 +25,6 @@ dataCreated = []
 
 # these are variables that will later be used to check answers
 toCheck = []
-
-if punten >= 8:
-    print("Gefeliciteert! U heeft de baan!")
-else:
-    print("Helaas! U heeft niet alle qualificaties voor de baan.")
 
 def dataSifter():
     global num
@@ -58,6 +51,9 @@ def dataSifter():
 
         num += 1
 
+    submitBtn = tkinter.Button(text="Submit", command=validate)
+    submitBtn.grid(column=0, row=num)
+
 def questionCreator(widgetType): # creates widgets
     if widgetType == "spinbox":
         toCheck[num].append(IntVar())
@@ -71,19 +67,21 @@ def questionCreator(widgetType): # creates widgets
         )
 
         if type(dataArray[num][0]) == type([]):
+            questionChanger(dataArray[num][0], toCheck[num - 1][1].get(), num)
             currentNum = num
             for x in range(2):
-                dataCreated[num - 1][2 + x].bind("<Button-1>", lambda possibleQuestions=dataArray[num][0], changeCondition=dataArray[num - 1][1][0], currentCondition=toCheck[num - 1][1].get(), currentNum=currentNum: questionChanger(possibleQuestions, changeCondition, currentCondition, currentNum))
+                dataCreated[num - 1][2 + x].bind("<Button-1>", lambda event: questionChanger(dataArray[currentNum][0], toCheck[currentNum - 1][1].get(), currentNum))
 
         dataCreated[num][2].grid(column=0, row=1)
     elif widgetType == "radio": # I could, in theory, make this have the ability to have as many radiobuttons as id want. But do i want to?
-        toCheck[num].append(BooleanVar())
+        values = dataArray[num][1]
+        toCheck[num].append(StringVar(mainWindow, values[1]))
         for subNum in range(2):
             dataCreated[num].append(
                 ttk.Radiobutton(
                     dataCreated[num][0],
                     text=toCheck[num][0][subNum],
-                    value=True if subNum == 0 else False,
+                    value=values[subNum],
                     variable=toCheck[num][1]
                 )
             )
@@ -93,12 +91,36 @@ def questionCreator(widgetType): # creates widgets
         dataCreated[num].append(ttk.Entry(dataCreated[num][0], textvariable=toCheck[num][1]))
         dataCreated[num][2].grid(column=0, row=1)
 
-def questionChanger(possibleQuestions, changeCondition, currentCondition, currentNum):
-    if changeCondition == currentCondition:
-        dataCreated[currentNum][1].configure(text=possibleQuestions[0])
-    else:
+def questionChanger(possibleQuestions, currentCondition, currentNum):
+    if currentCondition == dataArray[currentNum - 1][1][0]:
         dataCreated[currentNum][1].configure(text=possibleQuestions[1])
+        toCheck[currentNum][0] = dataArray[currentNum][1][1]
+    else:
+        dataCreated[currentNum][1].configure(text=possibleQuestions[0])
+        toCheck[currentNum][0] = dataArray[currentNum][1][0]
 
+def validate():
+    score = 0
+    noErrors = True
+    veld = 1
+
+    for data in toCheck:
+        if data[1].get() == "" and type(data[1].get()) == type("According to all known laws of aviation, there is no way that a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway. Because bees don't care what humans think is impossible."):
+            messagebox.showerror(message="Veld {} is leeg!".format(veld))
+            noErrors = False
+        elif data[1].get() == data[0] and type(data[1].get()) == type("According to all known laws of aviation, there is no way that a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway. Because bees don't care what humans think is impossible."):
+            score += 1
+        elif type(data[1].get()) == type(1):
+            if data[1].get() > data[0]:
+                score += 1
+
+        veld += 1
+
+    if noErrors:
+        if score >= 8:
+            print("Gefeliciteert! U heeft de baan!")
+        else:
+            print("Helaas! U heeft niet alle qualificaties voor de baan.")
 
 dataSifter()
 
