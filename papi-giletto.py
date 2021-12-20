@@ -1,18 +1,40 @@
 import tkinter
-from tkinter import Variable, ttk, StringVar, IntVar, messagebox
+from tkinter import ttk, StringVar, IntVar, messagebox
+
+# todo: Add ability to choose between toppings and add a new customer type "zakelijk".
 
 mainWindow = tkinter.Tk()
 mainWindow.configure(padx=50, pady=10)
+
 content = []
 amountBolletjes = 0
 hoorntjes = 0
 bakjes = 0
-smaakjesAantal = {
-    "Aardbei": 0,
-    "Chocolade": 0,
-    "Munt": 0,
-    "Vanille": 0
+extras = {
+    "smaakjes":{
+        "Aardbei": 0,
+        "Chocolade": 0,
+        "Munt": 0,
+        "Vanille": 0
+    },
+    "toppings":{
+        "Geen": 0,
+        "Slagroom": 0,
+        "Sprinkels": 0,
+        "Caramel saus": 0
+    }
 }
+prices = {
+    "bolletje": 1.1 if zakelijkOfPartikulier == "partikulier" else 9.80,
+    "hoorntje": 1.25,
+    "bakje": 0.75,
+    "toppings":{
+        "Slagroom": 0.5,
+        "Sprinkels": 0.3,
+        "Caramel saus": 0.6 if hoorntjeOfBakje == "Hoorntje" else 0.9
+    }
+}
+
 
 textLabel = tkinter.Label()
 textLabel.grid(column=0, row=0)
@@ -77,7 +99,7 @@ def howManyBolletjes():
         if currentBolletje <= aantalToGiveSmaakje[0]:
             submitBtn.configure(command=smaakjeValidator)
             theContentDestroyer9000()
-            contentCreator("Welke smaak moet bolletje {} zijn?".format(currentBolletje), "radio", list(smaakjesAantal.keys()))
+            contentCreator("Welke smaak moet bolletje {} zijn?".format(currentBolletje), "radio", list(extras["smaakjes"].keys()))
         else:
             amountBolletjes += aantalToGiveSmaakje[0]
             theContentDestroyer9000()
@@ -92,13 +114,13 @@ def howManyBolletjes():
         messagebox.showerror(message="Sorry, zulke grote bakken hebben we niet")
 
 def smaakjeValidator():
-    global smaakjesAantal
+    global extras
     global currentBolletje
     falseAnswer = True
 
-    for smaakje in list(smaakjesAantal.keys()):
+    for smaakje in list(extras["smaakjes"].keys()):
         if smaakje == answer.get():
-            smaakjesAantal[smaakje] += 1
+            extras["smaakjes"][smaakje] += 1
             currentBolletje += 1
             falseAnswer = False
             break
@@ -133,7 +155,7 @@ def againBestellen():
     else:
         messagebox.showerror(message="Sorry, dat snap ik niet...")
 
-contentCreator("Welkom bij Papi Gelato je mag alle smaken kiezen zolang het maar vanille ijs is.")
+contentCreator("Welkom bij Papi Gelato.")
 submitBtn.configure(command=beginScreen)
 
 mainWindow.mainloop()
