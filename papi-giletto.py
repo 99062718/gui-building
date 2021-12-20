@@ -7,6 +7,12 @@ content = []
 amountBolletjes = 0
 hoorntjes = 0
 bakjes = 0
+smaakjesAantal = {
+    "Aardbei": 0,
+    "Chocolade": 0,
+    "Munt": 0,
+    "Vanille": 0
+}
 
 textLabel = tkinter.Label()
 textLabel.grid(column=0, row=0)
@@ -49,32 +55,59 @@ def contentCreator(labelText, toCreate="", radioValues=[]):
 
 def theContentDestroyer9000(moreToDestroy=[]): # Hey, you! Yeah, you! Have you ever felt like the world would be better without all that stupid content? Well i've got just the thing for you. Introducing: theContentDestroyer9000! Now that pesky content cant bother us anymore!
     global content
-    for box in content:
-        box.destroy()
-    for box in moreToDestroy:
-        box.destroy()
+    for content in (content, moreToDestroy):
+        for box in content:
+            box.destroy()
     content = []
 
 def beginScreen():
-    submitBtn.configure(text="Submit")
+    global aantalToGiveSmaakje
+    global currentBolletje
+    currentBolletje = 1
+    aantalToGiveSmaakje = []
+
+    submitBtn.configure(text="Submit", command=howManyBolletjes)
     contentCreator("Hoeveel bolletjes wilt u?", "spinbox")
-    submitBtn.configure(command=howManyBolletjes)
 
 def howManyBolletjes():
     global amountBolletjes
-    
-    if answer.get() < 9:
-        amountBolletjes += answer.get()
-        theContentDestroyer9000()
-        if answer.get() < 4:
-            contentCreator("Wilt u deze {} bolletje(s) in een hoorntje of een bakje?".format(answer.get()), "radio", ["hoorntje", "bakje"])
-            submitBtn.configure(command=hoorntjeOfBakje)
-        elif answer.get() > 3:
-            contentCreator("Wilt u nog meer bestellen?", "radio", ["ja", "nee"])
-            submitBtn.configure(command=againBestellen)
-            messagebox.showinfo(message="Dan krijgt u van mij een bakje met {} bolletjes".format(answer.get()))
+    aantalToGiveSmaakje.append(answer.get())
+
+    if aantalToGiveSmaakje[0] < 9:
+        if currentBolletje <= aantalToGiveSmaakje[0]:
+            submitBtn.configure(command=smaakjeValidator)
+            theContentDestroyer9000()
+            contentCreator("Welke smaak moet bolletje {} zijn?".format(currentBolletje), "radio", list(smaakjesAantal.keys()))
+        else:
+            amountBolletjes += aantalToGiveSmaakje[0]
+            theContentDestroyer9000()
+            if aantalToGiveSmaakje[0] < 4:
+                contentCreator("Wilt u deze {} bolletje(s) in een hoorntje of een bakje?".format(aantalToGiveSmaakje[0]), "radio", ["hoorntje", "bakje"])
+                submitBtn.configure(command=hoorntjeOfBakje)
+            elif aantalToGiveSmaakje[0] > 3:
+                messagebox.showinfo(message="Dan krijgt u van mij een bakje met {} bolletjes".format(aantalToGiveSmaakje[0]))
+                contentCreator("Wilt u nog meer bestellen?", "radio", ["ja", "nee"])
+                submitBtn.configure(command=againBestellen)
     else:
         messagebox.showerror(message="Sorry, zulke grote bakken hebben we niet")
+
+def smaakjeValidator():
+    global smaakjesAantal
+    global currentBolletje
+    falseAnswer = True
+
+    for smaakje in list(smaakjesAantal.keys()):
+        if smaakje == answer.get():
+            smaakjesAantal[smaakje] += 1
+            currentBolletje += 1
+            falseAnswer = False
+            break
+    
+    if falseAnswer:
+        messagebox.showerror(message="Sorry, dat snap ik niet...")
+
+    howManyBolletjes()
+    
     
 def hoorntjeOfBakje():
     global hoorntjes, bakjes
