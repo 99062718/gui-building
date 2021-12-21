@@ -12,7 +12,6 @@ extras = {
     "smaakjes":{
         "Aardbei": 0,
         "Chocolade": 0,
-        "Munt": 0,
         "Vanille": 0
     },
     "toppings":{
@@ -23,7 +22,7 @@ extras = {
     }
 }
 prices = {
-    "bolletje": 1.1,
+    "bolletje": 0.95,
     "hoorntje": 1.25,
     "bakje": 0.75,
     "toppings":{
@@ -110,7 +109,7 @@ def zakelijkOfParticulierQuestion():
         submitBtn.configure(command=howManyBolletjes)
         contentCreator("Hoeveel {} wilt u?".format("bolletjes" if zakelijkOfParticulier == "Particulier" else "liters"), "spinbox")
     else:
-        messagebox.showerror(message="Sorry, dat snap ik niet...")
+        messagebox.showerror(message="Sorry dat is geen optie die we aanbieden...")
 
 def howManyBolletjes():
     global amountBolletjes
@@ -152,7 +151,7 @@ def smaakjeValidator():
             break
     
     if falseAnswer:
-        messagebox.showerror(message="Sorry, dat snap ik niet...")
+        messagebox.showerror(message="Sorry dat is geen optie die we aanbieden...")
 
     howManyBolletjes()
     
@@ -171,7 +170,7 @@ def hoorntjeOfBakje():
         contentCreator("Wat voor toppings wilt u?", "radio", list(extras["toppings"].keys()))
         submitBtn.configure(command=toppingValidator)
     else:
-        messagebox.showerror(message="Sorry, dat snap ik niet...")
+        messagebox.showerror(message="Sorry dat is geen optie die we aanbieden...")
 
 def toppingValidator():
     global extras, toppingCosts
@@ -190,7 +189,7 @@ def toppingValidator():
             break
     
     if falseAnswer:
-        messagebox.showerror(message="Sorry, dat snap ik niet...")
+        messagebox.showerror(message="Sorry dat is geen optie die we aanbieden...")
 
 def againBestellen():
     if answer.get() == "ja":
@@ -211,10 +210,10 @@ def againBestellen():
             "Topping                          = €{}".format(toppingCosts) if toppingCosts > 0 else "",
             "                              ------- +",
             "Totaal                      = €{}".format(totalCost),
-            "BTW (9%)                    = €{}".format(round(totalCost/109 * 9, 2))
+            "BTW (9%)                    = €{}".format(round(totalCost/106 * 6, 2))
         ])
     else:
-        messagebox.showerror(message="Sorry, dat snap ik niet...")
+        messagebox.showerror(message="Sorry dat is geen optie die we aanbieden...")
 
 contentCreator("Welkom bij Papi Gelato.")
 submitBtn.configure(command=beginScreen)
