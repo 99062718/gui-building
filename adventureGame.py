@@ -9,6 +9,10 @@ mainWindow.configure(pady=30, padx=50)
 characters = {
     "hero":{
         "maxHealth": 15
+    },
+
+    "villain":{
+        "maxHealth": 30
     }
 }
 health = 0
@@ -18,19 +22,22 @@ content = [[],[]]
 
 # todo: remake room system from original file to be more dynamic and easier to work with,
 # expand on options menu with current region, cheatcodes and some other stuff,
-# create a better characters array
+# make health system,
+# reintroduce question generator,
+# make battle system,
+# support for items (maybe)
 
 # This is to help visualize what the new room system might look like
 rooms = {
     "hero":{
         "village":{
-            0: {"content": [],
-                "go to": [["forest", 0, "forest"]]},
+            0: {"content": [["label", ["Where would you like to go?"]], ["radio", ["forest", "stay"]], ["button", ["Submit"]]],
+                "go to": [["forest", 0, "forest"], ["village", 0, "stay"]]},
             1: {"content": []}
         },
 
         "forest":{
-            0: []
+            0: {"content": []}
         }
     },
 
@@ -38,7 +45,7 @@ rooms = {
 
     "villain":{
         "overlord's castle":{
-            0: []
+            0: {"content": []}
         }
     }
 }
@@ -58,11 +65,13 @@ def theContentDestroyer9000(removeAll=False): # theContentDestroyer9000 is back 
 def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 still sells
     global content, playerAnswer
     num = [0, 0]
-    functionToUse = []
 
     theContentDestroyer9000()
 
     for info in newContent:
+
+        if info[0] in ("radio", "spinbox"):
+            playerAnswer = StringVar() if info[0] == "radio" else IntVar()
 
         for value in info[1]:
 
@@ -78,10 +87,10 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
                     value=playerAnswer
                 ))
             elif info[0] == "radio": # creates radiobutton
-                playerAnswer = StringVar()
                 content[0].append(ttk.Radiobutton(
                     text=value,
-                    variable=value
+                    value=value,
+                    variable=playerAnswer
                 ))
             elif info[0] == "button": # creates button
                 functionToUse = value
@@ -102,36 +111,70 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
 
 #----------------------------------------------------------------------------------Button functions
 
-def funcExecute(functionToUse):
+def funcExecute(functionToUse): #executes whatever function we put into it. useful for dynamically creating buttons
     functionList[functionToUse]()
 
-def options():
-    theContentDestroyer9000(True)
-    contentCreator([["button", ["Region", "Cheatcodes", "Exit"]]])
+class optionMenu: #everything related to the options menu
+    def options():
+        theContentDestroyer9000(True)
+        contentCreator([["button", ["Region", "Cheatcodes", "Exit"]]])
 
-def exit():
-    contentCreator([["button", ["Options"]]])
+    def showRegion():
+        messagebox.showinfo(message="Your current region is: {}".format(currentRegion[0]))
 
-functionList = {
-    "Options": options,
-    "Exit": exit
-}
+    def exitMenu():
+        contentCreator([["button", ["Options"]]])
+        contentCreator(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["content"])
+
+def characterSubmit(): #sets all stats for character once chosen and sends them to first room of their respective story
+    global currentCharacter, currentRegion, health
+
+    if playerAnswer.get() == None:
+        messagebox.showerror(message="Please select a character!")
+        return
+
+    for character in list(characters.keys()):
+        if character == playerAnswer.get(): 
+            health = characters[character]["maxHealth"]
+            currentCharacter = character
+            currentRegion = [list(rooms[character].keys())[0], 0]
+            contentCreator([["button", ["Options"]]])
+            contentCreator(rooms[character][list(rooms[character].keys())[0]][0]["content"])
+            break
 
 #----------------------------------------------------------------------------------Room gen functions
 
 def nextRoom():
-    pass
+    global currentRegion
+    goto = False
+
+    if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["go to"]:
+        for currentGoTo in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["go to"]:
+            if currentGoTo[2] == playerAnswer.get():
+                currentRegion = [currentGoTo[0], currentGoTo[1]]
+                goto = True
+                break
+    if goto == False:
+        currentRegion[1] += 1
+
+    roomGen()
 
 def roomGen():
-    pass
+    contentCreator(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["content"])
 
 def chooseCharacter():
-    contentCreator([["label", ["Choose a character"]], ["radio", list(characters.keys())]])
+    contentCreator([["label", ["Choose a character"]], ["radio", list(characters.keys())], ["button", ["Choose character"]]])
 
 #----------------------------------------------------------------------------------Start
 
-contentCreator([["button", ["Options"]]])
 chooseCharacter()
             
+functionList = {
+    "Options": optionMenu.options,
+    "Region": optionMenu.showRegion,
+    "Exit": optionMenu.exitMenu,
+    "Choose character": characterSubmit,
+    "Submit": nextRoom
+}
 
 mainWindow.mainloop()
