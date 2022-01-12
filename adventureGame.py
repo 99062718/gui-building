@@ -6,7 +6,7 @@ import random
 mainWindow = tkinter.Tk()
 mainWindow.configure(pady=30, padx=50)
 
-characters = {
+characters = { # list of characters and stats
     "hero":{
         "maxHealth": 15
     },
@@ -15,14 +15,18 @@ characters = {
         "maxHealth": 30
     }
 }
-health = 0
+
+difficulties = { #list of difficulties. array includes: numberOfOperators, additionSubtractionNumber, multiplicationNumber, damage enemies will deal
+    "easy": [4, 100, 20, 3],
+    "medium": [4, 1000, 100, 5],
+    "hard": [5, 5000, 500, "max"]
+}
 damageMultiplier = 1
 
 content = [[],[]]
 
 # todo: remake room system from original file to be more dynamic and easier to work with,
 # expand on options menu with current region, cheatcodes and some other stuff,
-# make health system,
 # reintroduce question generator,
 # make battle system,
 # support for items (maybe)
@@ -128,20 +132,38 @@ class optionMenu: #everything related to the options menu
 
 def characterSubmit(): #sets all stats for character once chosen and sends them to first room of their respective story
     global currentCharacter, currentRegion, health
+    currentCharacter = playerAnswer.get()
 
-    if playerAnswer.get() == None:
+    if currentCharacter in list(characters.keys()):
+        health = characters[currentCharacter]["maxHealth"]
+        currentRegion = [list(rooms[currentCharacter].keys())[0], 0]
+
+        contentCreator([["label", ["Select a difficulty"]], ["radio", list(difficulties.keys())], ["button", ["Choose difficulty"]]])
+    else:
         messagebox.showerror(message="Please select a character!")
-        return
 
-    for character in list(characters.keys()):
-        if character == playerAnswer.get(): 
-            health = characters[character]["maxHealth"]
-            currentCharacter = character
-            currentRegion = [list(rooms[character].keys())[0], 0]
-            contentCreator([["button", ["Options"]]])
-            contentCreator(rooms[character][list(rooms[character].keys())[0]][0]["content"])
-            break
+def diffSubmit():
+    global numberOfOperators, additionSubtractionNumber, multiplicationNumber, damageToPlayer, currentDiff
+    currentDiff = playerAnswer.get()
 
+    if currentDiff in list(difficulties.keys()):
+        numberOfOperators = difficulties[currentDiff][0]
+        additionSubtractionNumber = difficulties[currentDiff][1]
+        multiplicationNumber = difficulties[currentDiff][2]
+        damageToPlayer = difficulties[currentDiff][3] if difficulties[currentDiff][3] != "max" else health
+
+        contentCreator([["button", ["Options"]]])
+        contentCreator(rooms[currentCharacter][list(rooms[currentCharacter].keys())[0]][0]["content"])
+
+def healthCheck(deathMessage): # if player get hit. player get hurt. if player doesnt have health left. player die
+    global health
+
+    health -= damageToPlayer
+
+    if health <= 0:
+        messagebox.showError(message="{} \nGame over!".format(deathMessage))
+        mainWindow.destroy()
+        
 #----------------------------------------------------------------------------------Room gen functions
 
 def nextRoom():
@@ -174,6 +196,7 @@ functionList = {
     "Region": optionMenu.showRegion,
     "Exit": optionMenu.exitMenu,
     "Choose character": characterSubmit,
+    "Choose difficulty": diffSubmit,
     "Submit": nextRoom
 }
 
