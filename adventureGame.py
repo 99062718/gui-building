@@ -36,7 +36,7 @@ rooms = {
     "hero":{
         "village":{
             0: {"content": [["label", ["Where would you like to go?"]], ["radio", ["forest", "stay"]], ["button", ["Submit"]]],
-                "go to": [["forest", 0, "forest"], ["village", 0, "stay"]]},
+                "goTo": [["forest", 0, "forest"], ["village", 0, "stay"]]},
             1: {"content": []}
         },
 
@@ -209,11 +209,11 @@ def nextRoom():
     playerAnswer = mathAnswerCheck(playerAnswer.get()) if isMath else playerAnswer.get()
 
     if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]:
-        if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["battle"] == playerAnswer:
-            healthCheck(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["death message"])
+        if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["doDamageWhen"] == playerAnswer:
+            healthCheck(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["deathMessage"])
 
-    if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["go to"]:
-        for currentGoTo in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["go to"]:
+    if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["goTo"]:
+        for currentGoTo in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["goTo"]:
             if playerAnswer in currentGoTo or len(currentGoTo) == 2:
                 currentRegion = [currentGoTo[0], currentGoTo[1]]
                 goto = True
