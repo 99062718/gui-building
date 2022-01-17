@@ -37,11 +37,12 @@ rooms = {
         "village":{
             0: {"content": [["label", ["Where would you like to go?"]], ["radio", ["forest", "stay"]], ["button", ["Submit"]]],
                 "goTo": [["forest", 0, "forest"], ["village", 0, "stay"]]},
-            1: {"content": []}
+            1: {"content": [["label", ["test"]]]}
         },
 
         "forest":{
-            0: {"content": []}
+            0: {"content": [["label", ["mathQuestion"]], ["spinbox", [""]], ["button", ["Submit"]]],
+                "goTo": [["village", 0, "True"], ["village", 1, "False"]]}
         }
     },
 
@@ -53,7 +54,6 @@ rooms = {
         }
     }
 }
-
 #----------------------------------------------------------------------------------Content functions
 
 def theContentDestroyer9000(removeAll=False): # theContentDestroyer9000 is back in stock yet again. Now for 30% off for you and your family to destroy content with during the holidays!
@@ -67,7 +67,7 @@ def theContentDestroyer9000(removeAll=False): # theContentDestroyer9000 is back 
         content[1] = []
 
 def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 still sells
-    global content, playerAnswer
+    global content, playerAnswer, isMath
     num = [0, 0]
 
     theContentDestroyer9000()
@@ -78,9 +78,15 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
             playerAnswer = StringVar() if info[0] == "radio" else IntVar()
 
         for value in info[1]:
+            if value == "mathActive":
+                isMath = True
+                continue
 
             gridOrPlace = "place" if value == "Options" else "grid"
-            value = mathQuestionCreator() if value == "mathQuestion" else value
+
+            if value == "mathQuestion":
+                value = rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["content"][newContent.index(info)][1][info[1].index("mathQuestion")] = mathQuestionCreator()
+                rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["content"][newContent.index(info)][1].append("mathActive")
 
             if info[0] == "label": # creates label
                 content[0].append(tkinter.Label(text=value))
@@ -89,7 +95,7 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
                 content[0].append(ttk.Spinbox(
                     from_=float("-inf"),
                     to=float("inf"),
-                    value=playerAnswer
+                    textvariable=playerAnswer
                 ))
             elif info[0] == "radio": # creates radiobutton
                 content[0].append(ttk.Radiobutton(
@@ -120,7 +126,7 @@ def mathQuestionCreator(): #makes math questions by choosing an operator based o
     isAlternate = True
     isMath = True
 
-    if randomNumber is not(3 or 4):
+    if randomNumber not in [3, 4]:
         isAlternate = False
     
     if randomNumber == 1 or randomNumber == 2:
@@ -194,14 +200,15 @@ def healthCheck(deathMessage=""): # if player get hit. player get hurt. if playe
 #----------------------------------------------------------------------------------Room gen functions
 
 def mathAnswerCheck(input):
+
     if isAlternate == False and currentAnswer == input:
-        return True
+        return "True"
     elif isAlternate == True:
         if input > currentAnswer and higherOrLower == "higher":
-            return True
+            return "True"
         elif input < currentAnswer and higherOrLower == "lower":
-            return True
-    return False
+            return "True"
+    return "False"
 
 def nextRoom():
     global currentRegion, playerAnswer, isMath
@@ -209,11 +216,11 @@ def nextRoom():
     
     playerAnswer = mathAnswerCheck(playerAnswer.get()) if isMath else playerAnswer.get()
 
-    if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]:
-        if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["doDamageWhen"] == playerAnswer:
+    if "optional" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]].keys()):
+        if "doDamageWhen" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"].keys()) == playerAnswer:
             healthCheck(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["deathMessage"])
 
-    if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["goTo"]:
+    if "goTo" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]].keys()):
         for currentGoTo in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["goTo"]:
             if playerAnswer in currentGoTo or len(currentGoTo) == 2:
                 currentRegion = [currentGoTo[0], currentGoTo[1]]
