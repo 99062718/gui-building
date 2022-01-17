@@ -142,7 +142,8 @@ def mathQuestionCreator(): #makes math questions by choosing an operator based o
 #----------------------------------------------------------------------------------Button functions
 
 def funcExecute(functionToUse): #executes whatever function we put into it. useful for dynamically creating buttons
-    functionList[functionToUse]()
+    if functionToUse in list(functionList.keys()):
+        functionList[functionToUse]()
 
 class optionMenu: #everything related to the options menu
     def options():
