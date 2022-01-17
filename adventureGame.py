@@ -26,10 +26,10 @@ damageMultiplier = 1
 content = [[],[]]
 
 # todo: remake room system from original file to be more dynamic and easier to work with,
-# expand on options menu with current region, cheatcodes and some other stuff,
-# reintroduce question generator,
-# make battle system,
-# support for items (maybe)
+# expand on options menu with current region, cheatcodes and some other stuff (font size and font customization if able to),
+# allow for battles that continue until the health bar reaches 0,
+# support for items (maybe),
+# implement "optional":{"boss": [region to go to once boss health is 0, room to go to once boss health is 0, boss health]}}
 
 # This is to help visualize what the new room system might look like
 rooms = {
@@ -80,6 +80,7 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
         for value in info[1]:
 
             gridOrPlace = "place" if value == "Options" else "grid"
+            value = mathQuestionCreator() if value == "mathQuestion" else value
 
             if info[0] == "label": # creates label
                 content[0].append(tkinter.Label(text=value))
@@ -112,6 +113,31 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
             else:
                 content[0][num[0]].grid(row=num[0])
                 num[0] += 1
+
+def mathQuestionCreator(): #makes math questions by choosing an operator based on a random number
+    global isAlternate, currentAnswer, higherOrLower, isMath
+    randomNumber = random.randint(1, numberOfOperators)
+    isAlternate = True
+    isMath = True
+
+    if randomNumber is not(3 or 4):
+        isAlternate = False
+    
+    if randomNumber == 1 or randomNumber == 2:
+        randomNumber2 = random.randint(1, additionSubtractionNumber)
+        randomNumber3 = random.randint(1, additionSubtractionNumber)
+        currentAnswer = randomNumber2 + randomNumber3 if randomNumber == 1 else randomNumber2 - randomNumber3
+        return "What is {} + {}?".format(randomNumber2, randomNumber3) if randomNumber == 1 else "What is {} - {}?".format(randomNumber2, randomNumber3)
+    elif randomNumber == 3 or randomNumber == 4:
+        randomNumber2 = random.randint(1, additionSubtractionNumber)
+        currentAnswer = randomNumber2
+        higherOrLower = "higher" if randomNumber == 3 else "lower"
+        return "Name a number higher than {}".format(randomNumber2) if randomNumber == 3 else "Name a number lower than {}".format(randomNumber2)
+    elif randomNumber == 5:
+        randomNumber2 = random.randint(1, multiplicationNumber)
+        randomNumber3 = random.randint(1, multiplicationNumber)
+        currentAnswer = randomNumber2 * randomNumber3
+        return "What is {} * {}?".format(randomNumber2, randomNumber3)
 
 #----------------------------------------------------------------------------------Button functions
 
@@ -155,30 +181,47 @@ def diffSubmit():
         contentCreator([["button", ["Options"]]])
         contentCreator(rooms[currentCharacter][list(rooms[currentCharacter].keys())[0]][0]["content"])
 
-def healthCheck(deathMessage): # if player get hit. player get hurt. if player doesnt have health left. player die
+def healthCheck(deathMessage=""): # if player get hit. player get hurt. if player doesnt have health left. player die
     global health
 
     health -= damageToPlayer
 
     if health <= 0:
-        messagebox.showError(message="{} \nGame over!".format(deathMessage))
-        mainWindow.destroy()
+        theContentDestroyer9000(True)
+        contentCreator([["label", [deathMessage, "Game over!"]]])
         
 #----------------------------------------------------------------------------------Room gen functions
 
+def mathAnswerCheck(input):
+    if isAlternate == False and currentAnswer == input:
+        return True
+    elif isAlternate == True:
+        if input > currentAnswer and higherOrLower == "higher":
+            return True
+        elif input < currentAnswer and higherOrLower == "lower":
+            return True
+    return False
+
 def nextRoom():
-    global currentRegion
+    global currentRegion, playerAnswer, isMath
     goto = False
+    
+    playerAnswer = mathAnswerCheck(playerAnswer.get()) if isMath else playerAnswer.get()
+
+    if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]:
+        if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["battle"] == playerAnswer:
+            healthCheck(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["death message"])
 
     if rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["go to"]:
         for currentGoTo in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["go to"]:
-            if currentGoTo[2] == playerAnswer.get():
+            if playerAnswer in currentGoTo or len(currentGoTo) == 2:
                 currentRegion = [currentGoTo[0], currentGoTo[1]]
                 goto = True
                 break
     if goto == False:
         currentRegion[1] += 1
 
+    isMath = False
     roomGen()
 
 def roomGen():
