@@ -8,11 +8,13 @@ mainWindow.configure(pady=30, padx=50)
 
 characters = { # list of characters and stats
     "hero":{
-        "maxHealth": 15
+        "maxHealth": 15,
+        "attack": 3
     },
 
     "villain":{
-        "maxHealth": 30
+        "maxHealth": 30,
+        "attack": 7
     }
 }
 
@@ -24,12 +26,11 @@ difficulties = { #list of difficulties. array includes: numberOfOperators, addit
 damageMultiplier = 1
 
 content = [[],[]]
+isMath = False
+currentBoss = []
 
-# todo: remake room system from original file to be more dynamic and easier to work with,
-# expand on options menu with current region, cheatcodes and some other stuff (font size and font customization if able to),
-# allow for battles that continue until the health bar reaches 0,
-# support for items (maybe),
-# implement "optional":{"boss": [region to go to once boss health is 0, room to go to once boss health is 0, boss health]}}
+# todo: expand on options menu with current region, cheatcodes and some other stuff (font size and font customization if able to),
+# support for items (maybe)
 
 # This is to help visualize what the new room system might look like
 rooms = {
@@ -50,7 +51,12 @@ rooms = {
 
     "villain":{
         "overlord's castle":{
-            0: {"content": []}
+            0: {"content": [["label", ["BIG MONSTER", "mathQuestion"]], ["spinbox", [""]], ["button", ["Submit"]]],
+                "optional":{"doDamageWhen":["False"], "deathMessage": "DEATH", "boss":["random place", 0, 8], "doDamageToBossWhen":["True"]}},
+            2: {"content": [["label", ["SWING"]]]}
+        },
+        "random place":{
+            0: {"content": [["label", ["GOOD JOB THEYRE DEAD!!!!"]]]}
         }
     }
 }
@@ -67,7 +73,7 @@ def theContentDestroyer9000(removeAll=False): # theContentDestroyer9000 is back 
         content[1] = []
 
 def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 still sells
-    global content, playerAnswer, isMath
+    global content, playerInput, isMath
     num = [0, 0]
 
     theContentDestroyer9000()
@@ -75,7 +81,7 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
     for info in newContent:
 
         if info[0] in ("radio", "spinbox"):
-            playerAnswer = StringVar() if info[0] == "radio" else IntVar()
+            playerInput = StringVar() if info[0] == "radio" else IntVar()
 
         for value in info[1]:
             if value == "mathActive":
@@ -91,17 +97,17 @@ def contentCreator(newContent=[]): # the only reason theContentDestroyer9000 sti
             if info[0] == "label": # creates label
                 content[0].append(tkinter.Label(text=value))
             elif info[0] == "spinbox": # creates spinbox
-                playerAnswer = IntVar()
+                playerInput = IntVar()
                 content[0].append(ttk.Spinbox(
                     from_=float("-inf"),
                     to=float("inf"),
-                    textvariable=playerAnswer
+                    textvariable=playerInput
                 ))
             elif info[0] == "radio": # creates radiobutton
                 content[0].append(ttk.Radiobutton(
                     text=value,
                     value=value,
-                    variable=playerAnswer
+                    variable=playerInput
                 ))
             elif info[0] == "button": # creates button
                 functionToUse = value
@@ -164,11 +170,12 @@ class optionMenu: #everything related to the options menu
         contentCreator(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["content"])
 
 def characterSubmit(): #sets all stats for character once chosen and sends them to first room of their respective story
-    global currentCharacter, currentRegion, health
-    currentCharacter = playerAnswer.get()
+    global currentCharacter, currentRegion, health, playerAttack
+    currentCharacter = playerInput.get()
 
     if currentCharacter in list(characters.keys()):
         health = characters[currentCharacter]["maxHealth"]
+        playerAttack = characters[currentCharacter]["attack"]
         currentRegion = [list(rooms[currentCharacter].keys())[0], 0]
 
         contentCreator([["label", ["Select a difficulty"]], ["radio", list(difficulties.keys())], ["button", ["Choose difficulty"]]])
@@ -177,7 +184,7 @@ def characterSubmit(): #sets all stats for character once chosen and sends them 
 
 def diffSubmit():
     global numberOfOperators, additionSubtractionNumber, multiplicationNumber, damageToPlayer, currentDiff
-    currentDiff = playerAnswer.get()
+    currentDiff = playerInput.get()
 
     if currentDiff in list(difficulties.keys()):
         numberOfOperators = difficulties[currentDiff][0]
@@ -211,14 +218,38 @@ def mathAnswerCheck(input):
     return "False"
 
 def nextRoom():
-    global currentRegion, playerAnswer, isMath
+    global currentRegion, isMath, currentBoss
     goto = False
     
-    playerAnswer = mathAnswerCheck(playerAnswer.get()) if isMath else playerAnswer.get()
+    playerAnswer = mathAnswerCheck(playerInput.get()) if isMath else playerInput.get()
+
+    if playerAnswer == "":
+        messagebox.showerror(message="Please enter something here")
+        return
 
     if "optional" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]].keys()):
-        if "doDamageWhen" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"].keys()) == playerAnswer:
-            healthCheck(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["deathMessage"])
+        if "doDamageWhen" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"].keys()):
+            if playerAnswer in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["doDamageWhen"]:
+                healthCheck(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["deathMessage"])
+                if health <= 0:
+                    return
+
+        if "boss" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"].keys()):
+            currentBoss = rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["boss"]
+            currentBoss.append(True)
+
+    try:
+        if currentBoss[3]:
+            if playerAnswer in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["optional"]["doDamageToBossWhen"]:
+                currentBoss[2] -= playerAttack * damageMultiplier
+
+            if currentBoss[2] <= 0:
+                currentRegion = [currentBoss[0], currentBoss[1]]
+                currentBoss[3] = False
+                return roomGen()
+    except:
+        pass
+
 
     if "goTo" in list(rooms[currentCharacter][currentRegion[0]][currentRegion[1]].keys()):
         for currentGoTo in rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["goTo"]:
@@ -230,7 +261,7 @@ def nextRoom():
         currentRegion[1] += 1
 
     isMath = False
-    roomGen()
+    return roomGen()
 
 def roomGen():
     contentCreator(rooms[currentCharacter][currentRegion[0]][currentRegion[1]]["content"])
